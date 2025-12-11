@@ -178,13 +178,12 @@
                 </a>
             </div>
 
-            <!-- Placeholder for Photographer's Bio Image or Process Graphic -->
-            <div class="h-64 sm:h-96 rounded-xl shadow-2xl overflow-hidden animated-element" style="animation-delay: 0.5s;">
-                <!-- UPDATED SRC: Path changed to repository root and extension updated to .png -->
+            <!-- Bio Shot Image Container (Set to auto-height for portrait image) -->
+            <div class="rounded-xl shadow-2xl overflow-hidden max-w-xs lg:max-w-sm mx-auto animated-element" style="animation-delay: 0.5s;">
                 <img src="bio_shot.png"
                      alt="Ronel Nerveza - Digital Content Creator"
-                     class="w-full h-full object-cover opacity-90 hover:opacity-100 transition duration-500 ease-in-out"
-                     onerror="this.onerror=null; this.src='https://placehold.co/900x600/e9f3ff/1d4ed8?text=Ronel+Nerveza+Content+Creator';"
+                     class="w-full h-auto object-contain opacity-90 hover:opacity-100 transition duration-500 ease-in-out"
+                     onerror="this.onerror=null; this.src='https://placehold.co/832x1248/e9f3ff/1d4ed8?text=Ronel+Nerveza+Content+Creator';"
                 >
             </div>
         </div>
@@ -269,6 +268,7 @@
                                 <div>
                                     <strong class="text-gray-900">Canva / Other Graphic Tools:</strong>
                                     <p class="text-sm text-gray-500">Rapid creation of social media content, mockups, flyers, and marketing collateral.</p>
+                                    
                                 </div>
                             </li>
                         </ul>
@@ -883,65 +883,75 @@
         /**
          * 1. Three.js Particle System Setup
          * Creates a subtle, animated particle field in the background of the hero section.
+         * FIX: Switched from THREE.Float32Array to native Float32Array to fix the TypeError.
+         * Also used THREE.BufferAttribute for modern three.js usage.
          */
         function initThreeJsParticles() {
-            const canvas = document.getElementById('particle-canvas');
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-
-            // Create particles
-            const particleCount = 150;
-            const particles = new THREE.BufferGeometry();
-            const positions = [];
-            const colors = [];
-
-            // Color: Professional Light Blue (0x66AADD)
-            const color = new THREE.Color(0x66AADD);
-            const size = 0.5;
-
-            for (let i = 0; i < particleCount; i++) {
-                // Random position within a 3D box
-                positions.push((Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200);
-                colors.push(color.r, color.g, color.b);
-            }
-
-            particles.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            particles.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-
-            const particleMaterial = new THREE.PointsMaterial({
-                size: size,
-                vertexColors: true,
-                blending: THREE.AdditiveBlending,
-                transparent: true,
-                sizeAttenuation: true
-            });
-
-            const particleSystem = new THREE.Points(particles, particleMaterial);
-            scene.add(particleSystem);
-
-            camera.position.z = 50;
-
-            // Animation Loop
-            function animate() {
-                requestAnimationFrame(animate);
-
-                // Rotate the particle field slightly
-                particleSystem.rotation.y += 0.0005;
-                particleSystem.rotation.x += 0.0002;
-
-                renderer.render(scene, camera);
-            }
-
-            // Handle resizing
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
+            try {
+                const canvas = document.getElementById('particle-canvas');
+                const scene = new THREE.Scene();
+                const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true });
                 renderer.setSize(window.innerWidth, window.innerHeight);
-            });
 
-            animate();
+                // Create particles
+                const particleCount = 150;
+                const particles = new THREE.BufferGeometry();
+                const positions = [];
+                const colors = [];
+
+                // Color: Professional Light Blue (0x66AADD)
+                const color = new THREE.Color(0x66AADD);
+                const size = 0.5;
+
+                for (let i = 0; i < particleCount; i++) {
+                    // Random position within a 3D box
+                    positions.push((Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200, (Math.random() - 0.5) * 200);
+                    colors.push(color.r, color.g, color.b);
+                }
+
+                // FIX: Use native Float32Array and THREE.BufferAttribute
+                particles.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+                particles.setAttribute('color', new THREE.BufferAttribute(new Float32Array(colors), 3));
+
+                const particleMaterial = new THREE.PointsMaterial({
+                    size: size,
+                    vertexColors: true,
+                    blending: THREE.AdditiveBlending,
+                    transparent: true,
+                    sizeAttenuation: true
+                });
+
+                const particleSystem = new THREE.Points(particles, particleMaterial);
+                scene.add(particleSystem);
+
+                camera.position.z = 50;
+
+                // Animation Loop
+                function animate() {
+                    requestAnimationFrame(animate);
+
+                    // Rotate the particle field slightly
+                    particleSystem.rotation.y += 0.0005;
+                    particleSystem.rotation.x += 0.0002;
+
+                    renderer.render(scene, camera);
+                }
+
+                // Handle resizing
+                window.addEventListener('resize', () => {
+                    camera.aspect = window.innerWidth / window.innerHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+
+                animate();
+            } catch (error) {
+                console.error("Three.js initialization failed:", error);
+                // Optional: Hide the canvas if Three.js fails to initialize to prevent visual bugs
+                const canvas = document.getElementById('particle-canvas');
+                if (canvas) canvas.style.display = 'none';
+            }
         }
 
         /**
